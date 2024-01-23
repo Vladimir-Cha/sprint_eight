@@ -202,7 +202,6 @@ func main() {
 	store := NewParcelStore(db)
 	service := NewParcelService(store)
 
-	// Регистрация посылки
 	client := 1
 	address := "Псков, д. Пушкина, ул. Колотушкина, д. 5"
 	p, err := service.Register(client, address)
@@ -211,7 +210,6 @@ func main() {
 		return
 	}
 
-	// Изменение адреса
 	newAddress := "Саратов, д. Верхние Зори, ул. Козлова, д. 25"
 	err = service.ChangeAddress(p.Number, newAddress)
 	if err != nil {
@@ -219,51 +217,42 @@ func main() {
 		return
 	}
 
-	// Изменение статуса
 	err = service.NextStatus(p.Number)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	// Вывод посылок клиента
 	err = service.PrintClientParcels(client)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	// Попытка удаления отправленной посылки
 	err = service.Delete(p.Number)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	// Вывод посылок клиента
-	// Предыдущая посылка не должна удалиться, т.к. её статус НЕ «зарегистрирована»
 	err = service.PrintClientParcels(client)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	// Регистрация новой посылки
 	p, err = service.Register(client, address)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	// Удаление новой посылки
 	err = service.Delete(p.Number)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	// Вывод посылок клиента
-	// Здесь не должно быть последней посылки, т.к. она должна была успешно удалиться
 	err = service.PrintClientParcels(client)
 	if err != nil {
 		log.Println(err)
