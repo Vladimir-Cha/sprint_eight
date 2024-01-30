@@ -62,6 +62,7 @@ func (s ParcelService) PrintClientParcels(client int) error {
 		fmt.Printf("Посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s, статус %s\n",
 			parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt, parcel.Status)
 	}
+
 	fmt.Println()
 
 	return nil

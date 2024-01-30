@@ -32,29 +32,30 @@ func getTestParcel() Parcel {
 func TestAddGetDelete(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker_test.db")
-	store := NewParcelStore(db)
-	parcel := getTestParcel()
+    store := NewParcelStore(db)
+    parcel := getTestParcel()
 
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 	id, err := store.Add(parcel)
-	require.NoError(t, err)
-	require.NotZero(t, id, "ожидаем  нулевой id")
+    require.NoError(t, err)
+    require.NotZero(t, id, "ожидаем  нулевой id")
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	storedParcel, err := store.Get(id)
-	require.NoError(t, err)
-	require.Equal(t, parcel, storedParcel, "Вызов сохранённой посылки через гет")
+    require.NoError(t, err)
+    require.Equal(t, parcel, storedParcel, "Вызов сохранённой посылки через гет")
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
 	err = store.Delete(id)
-	require.NoError(t, err)
+    require.NoError(t, err)
 
+	// использовал require.ErrorIs(t, ) чтобы проверить на конкретную ошибку как подсказал проверяющий
 	deletedParcel, err := store.Get(id)
-	require.Error(t, err, "Ожидаю ошибки, так как посылка должна быть удалена")
-	require.Equal(t, Parcel{}, deletedParcel, "Удалённая посылка должна быть пустой")
+    require.ErrorIs(t, err, sql.ErrNoRows, "Ожидаю ошибку sql.ErrNoRows, так как посылка должна быть удалена")
+    require.Equal(t, Parcel{}, deletedParcel, "Удалённая посылка должна быть пустой")
 }
 
 // TestSetAddress проверяет обновление адреса
@@ -161,9 +162,10 @@ func TestGetByClient(t *testing.T) {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
-			originalParcel, ok := findParcelByID(parcel.Number, parcels)
-			require.True(t, ok, "Сохраненная посылка должна отображаться")
-			require.Equal(t, originalParcel, parcel, "Сохраненная посылка должна соответствовать тому что добавили")
+		//исправил
+	 originalParcel, ok := parcelMap[parcel.Number]
+    require.True(t, ok, "Сохраненная посылка должна отображаться")
+    require.Equal(t, originalParcel, parcel, "Сохраненная посылка должна соответствовать тому, что добавили")
 		
 	}
 }
