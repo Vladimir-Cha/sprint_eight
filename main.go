@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -12,14 +13,16 @@ const (
 	ParcelStatusRegistered = "registered"
 	ParcelStatusSent       = "sent"
 	ParcelStatusDelivered  = "delivered"
+	PathDB                 = "tracker.db"
+	DBDriver               = "sqlite"
 )
 
 type Parcel struct {
-	Number    int
-	Client    int
-	Status    string
-	Address   string
-	CreatedAt string
+	Number    int    //номер посылки
+	Client    int    //идентификатор клиента
+	Status    string //статус посылки
+	Address   string //адрес посылки
+	CreatedAt string //дата и время создания посылки
 }
 
 type ParcelService struct {
@@ -97,9 +100,14 @@ func (s ParcelService) Delete(number int) error {
 }
 
 func main() {
-	// настройте подключение к БД
+	db, err := sql.Open(DBDriver, PathDB)
+	if err != nil {
+		log.Println("can't open DB:", err)
+	}
+	defer db.Close()
 
-	store := // создайте объект ParcelStore функцией NewParcelStore
+	store := NewParcelStore(db)
+
 	service := NewParcelService(store)
 
 	// регистрация посылки
