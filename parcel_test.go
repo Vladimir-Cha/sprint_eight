@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	// randSource источник псевдо случайных чисел.
+	// randSource источник псевдо случайных чисел. 
 	// Для повышения уникальности в качестве seed
 	// используется текущее время в unix формате (в виде числа)
 	randSource = rand.NewSource(time.Now().UnixNano())
@@ -31,7 +31,10 @@ func getTestParcel() Parcel {
 // TestAddGetDelete проверяет добавление, получение и удаление посылки
 func TestAddGetDelete(t *testing.T) {
 	// prepare
-	db, err := // настройте подключение к БД
+	db, err := sql.Open("sql", "tracker.db")// настройте подключение к БД
+	if err != nil{
+		return
+	}
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
