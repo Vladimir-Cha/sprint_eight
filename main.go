@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -98,6 +99,11 @@ func (s ParcelService) Delete(number int) error {
 
 func main() {
 	// настройте подключение к БД
+	db, err :=sql.Open("sqlite", "tracker.db")
+	if err != nil{
+		require.NoError(t, err)
+	}
+	defer db.Close()
 
 	store := // создайте объект ParcelStore функцией NewParcelStore
 	service := NewParcelService(store)
