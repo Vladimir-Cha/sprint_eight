@@ -109,6 +109,28 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
+	db, err := sql.Open("sqlite", "tracker.db")
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SELECT status FROM parcel WHERE number = :number",
+		sql.Named("number", number))
+	if err != nil {
+		return err
+	}
+	var status string
+	_ = rows.Scan(&status)
+
+	if status == "registered" {
+		_, err := db.Exec("UPDATE parcel SET address = :address WHERE number = :number",
+			sql.Named("address", address),
+			sql.Named("number", number))
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -116,6 +138,28 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
+
+	db, err := sql.Open("sqlite", "tracker.db")
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SELECT status FROM parcel WHERE number = :number",
+		sql.Named("number", number))
+	if err != nil {
+		return err
+	}
+	var status string
+	_ = rows.Scan(&status)
+
+	if status == "registered" {
+		_, err := db.Exec("DELETE FROM parcel WHERE number = :number",
+			sql.Named("number", number))
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
