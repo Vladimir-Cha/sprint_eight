@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,25 +36,45 @@ func TestAddGetDelete(t *testing.T) {
 	if err != nil{
 		return
 	}
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
 	// add
-	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
+	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и 
+	//наличии идентификатора
+
+	idAddParc, err := Add(parcel)
+	if err != nil{
+		return
+	}
+	require.NoError(t, err)
+	assert.NotEmpty(t, idAddParc)
 
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
-	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
+	// проверьте, что значения всех полей в полученном объекте совпадают 
+	//со значениями полей в переменной parcel
+
+	 getLine, err := Get(idAddParc)
+	 require.NoError(t, err)
+	 assert.Equal(t, getLine, parsel)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
+
+	err := Delete(idAddParc)
+	require.NoError(t, err)
+	getLine, err := Get(idAddParc)
+	require.NoError(t, err)
+	assert.Empty(getLine)
 }
 
 // TestSetAddress проверяет обновление адреса
 func TestSetAddress(t *testing.T) {
 	// prepare
-	db, err := sql.Open("sqlite", "tracker.db")// настройте подключение к БД
+	db, err := // настройте подключение к БД
 
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
