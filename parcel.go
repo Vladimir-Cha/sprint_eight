@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 )
 
@@ -24,12 +23,12 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 	)
 
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("add error: %w", err)
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("add error: %w", err)
 	}
 
 	return int(id), nil
@@ -45,7 +44,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 
 	if err != nil {
-		return p, err
+		return p, fmt.Errorf("get error: %w", err)
 	}
 
 	return p, nil
@@ -56,7 +55,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	// здесь из таблицы может вернуться несколько строк
 	rows, err := s.db.Query("SELECT * FROM parcel WHERE client = :client", sql.Named("client", client))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get by client error: %w", err)
 	}
 
 	defer rows.Close()
@@ -68,7 +67,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		p := Parcel{}
 		err := rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("get by client error: %w", err)
 		}
 		res = append(res, p)
 	}
@@ -84,8 +83,7 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 		sql.Named("number", number))
 
 	if err != nil {
-		return errors.New(fmt.Sprintf("SetStatus :%s", err))
-
+		return fmt.Errorf("set status error: %w", err)
 	}
 
 	return nil
@@ -100,7 +98,7 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 		sql.Named("number", number),
 		sql.Named("status", status))
 	if err != nil {
-		return errors.New(fmt.Sprintf("SetAddress :%s", err))
+		return fmt.Errorf("set addres error: %w", err)
 	}
 
 	return nil
@@ -114,7 +112,7 @@ func (s ParcelStore) Delete(number int) error {
 		sql.Named("number", number),
 		sql.Named("status", status))
 	if err != nil {
-		return errors.New(fmt.Sprintf("Delete :%s", err))
+		return fmt.Errorf("delete error: %w", err)
 	}
 
 	return nil
