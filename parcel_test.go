@@ -174,9 +174,17 @@ func TestGetByClient(t *testing.T) {
 		return
 	}
 	defer storedParcels.Close()
+	var Number []int
 
 	for storageParcels.Next() {
-		_ := storedParcels.Scan(&Number)
+		numb := 0
+		err := storedParcels.Scan(&numb)
+		if err != nill {
+			return
+		}
+		Number = append(Number, numb)
+		storageParcels = Number
+
 	}
 
 	// получите список посылок по идентификатору клиента,
@@ -186,13 +194,15 @@ func TestGetByClient(t *testing.T) {
 	// добавленных
 
 	require.NoError(t, err)
-	assert.Equal(t, len(storedParcels.number), len(parcelMap))
+	assert.Equal(t, len(storedParcels), len(parcelMap))
 
 	// check
 	for _, parcel := range storedParcels {
-		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
+		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки,
+		// значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
 
+		assert.NotEmpty(t, parcelMap(parcel))
 	}
 }
