@@ -132,8 +132,11 @@ func TestSetStatus(t *testing.T) {
 // TestGetByClient проверяет получение посылок по идентификатору клиента
 func TestGetByClient(t *testing.T) {
 	// prepare
-	db, err := sql. // настройте подключение к БД
-	
+	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
+	if err != nil {
+		return
+	}
+	defer db.Close()
 
 	parcels := []Parcel{
 		getTestParcel(),
@@ -165,15 +168,31 @@ func TestGetByClient(t *testing.T) {
 	}
 
 	// get by client
-	storedParcels, err := GetByClient(client) // получите список посылок по идентификатору клиента,
-	//сохранённого в переменной client
+	storedParcels, err := db.Query("SELECT number FROM parcel WHERE client = :client",
+		sql.Named("client", client))
+	if err != nil {
+		return
+	}
+	defer storedParcels.Close()
+
+	for storageParcels.Next() {
+		_ := storedParcels.Scan(&Number)
+	}
+
+	// получите список посылок по идентификатору клиента,
+	// сохранённого в переменной client
 	// убедитесь в отсутствии ошибки
-	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
+	// убедитесь, что количество полученных посылок совпадает с количеством
+	// добавленных
+
+	require.NoError(t, err)
+	assert.Equal(t, len(storedParcels.number), len(parcelMap))
 
 	// check
 	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
+
 	}
 }
