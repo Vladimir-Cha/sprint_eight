@@ -3,11 +3,11 @@ package main
 import (
 	"database/sql"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"math/rand"
+	_ "modernc.org/sqlite"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/require"
 )
 
 var (
