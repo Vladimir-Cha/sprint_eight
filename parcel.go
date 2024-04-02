@@ -112,19 +112,20 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
-	query := "DELETE FROM parcel WHERE number = ? AND status = ?"
+	query := "DELETE FROM parcel WHERE number = ? and status = ?"
 
 	res, err := s.db.Exec(query, number, ParcelStatusRegistered)
 	if err != nil {
-		return fmt.Errorf("fail delete parcel %s", err)
+		return fmt.Errorf("failed to delete parcel: %s", err)
 	}
+
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("error getting rows affected")
+		return fmt.Errorf("error getting rows affected: %s", err)
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("unable delete parcel, incorrect status or parcel not found")
+		return fmt.Errorf("unable to delete parcel, incorrect status or parcel not found")
 	}
 
 	return nil
