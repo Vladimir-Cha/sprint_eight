@@ -115,6 +115,7 @@ func TestSetStatus(t *testing.T) {
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
+
 func TestGetByClient(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
@@ -126,27 +127,16 @@ func TestGetByClient(t *testing.T) {
 		getTestParcel(),
 		getTestParcel(),
 	}
-	parcelMap := map[int]Parcel{}
 
 	client := randRange.Intn(10_000_000)
-	for i := range parcels {
-		parcels[i].Client = client
-
-		id, err := store.Add(parcels[i])
+	for i, p := range parcels {
+		p.Client = client
+		p.Number, err = store.Add(p)
 		require.NoError(t, err)
-		parcels[i].Number = id
-		parcelMap[id] = parcels[i]
+		parcels[i] = p
 	}
 
 	storedParcels, err := store.GetByClient(client)
 	require.NoError(t, err)
-	require.Len(t, storedParcels, len(parcels))
-
-	for _, parcel := range storedParcels {
-		expectedParcel, ok := parcelMap[parcel.Number]
-		assert.True(t, ok, "parcel with number %d not found in parcelMap", parcel.Number)
-
-		require.Equal(t, expectedParcel, parcel)
-	}
-
+	assert.ElementsMatch(t, storedParcels, parcels)
 }
