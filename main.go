@@ -165,5 +165,3 @@ func main() {
 		fmt.Println(err)
 	}
 }
-
-//pusewqr
