@@ -20,7 +20,7 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 		sql.Named("Address", p.Address),
 		sql.Named("Created_at", p.CreatedAt))
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	id, err := res.LastInsertId()
