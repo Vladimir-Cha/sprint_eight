@@ -38,7 +38,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	row := s.db.QueryRow("SELECT * FROM parcel WHERE Number = :Number", sql.Named("Number", number))
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		return p, err
+		return Parcel{}, err
 	}
 
 	return p, nil
@@ -46,7 +46,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 
-	rows, err := s.db.Query("SELECT * FROM parcel")
+	rows, err := s.db.Query("SELECT * FROM parcel WHERE Client = :Client", sql.Named("Client", client))
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +61,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 			return res, err
 		}
 		res = append(res, parcel)
+	}
+
+	if err = rows.Err(); err != nil {
+		return res, err
 	}
 
 	return res, nil
@@ -78,14 +82,6 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
-	//p, err := s.Get(number)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//if p.Status != ParcelStatusRegistered {
-	//	return fmt.Errorf(" ")
-	//}
 
 	_, err := s.db.Exec("UPDATE parcel SET Address = :Address WHERE Number = :Number and Status = :Status",
 		sql.Named("Number", number),
