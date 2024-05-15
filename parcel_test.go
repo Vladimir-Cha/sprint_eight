@@ -142,17 +142,20 @@ func TestGetByClient(t *testing.T) {
 	}
 
 	// get by client
-	storedParcels, err := storedParcels, err := store.GetByClient(client) // получите список посылок по идентификатору клиента, сохранённого в переменной client
+	//storedParcels, err := // получите список посылок по идентификатору клиента, сохранённого в переменной client
 	// убедитесь в отсутствии ошибки
-	require.NoError(t, err, "Error in GetByClient function")
+	storedParcels, err := store.GetByClient(client)
+	require.NoError(t, err)
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
-	require.Equal(t, len(storedParcels), len(parcels), "Wring quantity in GetByClient function")
+	require.Len(t, storedParcels, len(parcels))
 
 	// check
-	for n, parcel := range storedParcels {
+	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		require.Equal(t, parcel, parcels[n], "Saved values are not equal to test values.")
+		expectedParcel, ok := parcelMap[parcel.Number]
+		require.True(t, ok)
+		require.Equal(t, expectedParcel, parcel)
 	}
 }
