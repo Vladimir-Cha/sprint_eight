@@ -12,9 +12,7 @@ type ParcelStore struct {
 func NewParcelStore(db *sql.DB) ParcelStore {
 	return ParcelStore{db: db}
 }
-
 func (s ParcelStore) Add(p Parcel) (int, error) {
-	// реализуйте добавление строки в таблицу parcel, используйте данные из переменной p
 	res, err := s.db.Exec("insert into parcel (client,status,address,created_at) values (:client,:status,:address,:created_at)",
 		sql.Named("client", p.Client),
 		sql.Named("status", p.Status),
@@ -25,21 +23,22 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 		fmt.Println(err)
 		return 0, nil
 	}
+
 	id, err := res.LastInsertId()
 
 	if err != nil {
-		return int(id), nil
+		fmt.Println(err)
+		return 0, nil
 	}
-	// верните идентификатор последней добавленной записи
 	return int(id), nil
 }
 
 func (s ParcelStore) Get(number int) (Parcel, error) {
-	p := Parcel{}
 	// реализуйте чтение строки по заданному number
 	// здесь из таблицы должна вернуться только одна строка
 	row := s.db.QueryRow("select number,client,status,address,created_at from parcel where number = :number", sql.Named("number", number))
 	// заполните объект Parcel данными из таблицы
+	p := Parcel{}
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 
 	if err != nil {
@@ -49,11 +48,9 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 
 	return p, nil
 }
-
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	// реализуйте чтение строк из таблицы parcel по заданному client
 	// здесь из таблицы может вернуться несколько строк
-
 	// заполните срез Parcel данными из таблицы
 	var res []Parcel
 
