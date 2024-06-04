@@ -38,19 +38,12 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	// здесь из таблицы должна вернуться только одна строка
 	p := Parcel{}
 	query := "SELECT number, client, status, address, created_at FROM parcel WHERE number = :number"
-	rows, err := s.db.Query(query, sql.Named("number", number))
+	err := s.db.QueryRow(query, sql.Named("number", number)).Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return p, errors.New("parcel not found")
 		}
 		return p, err
-	}
-	defer rows.Close()
-
-	// заполните объект Parcel данными из таблицы
-	err = rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
-	if err != nil {
-		return Parcel{}, err
 	}
 	return p, nil
 }
