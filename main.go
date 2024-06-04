@@ -43,7 +43,7 @@ func (s ParcelService) Register(client int, address string) (Parcel, error) {
 		return parcel, err
 	}
 
-	parcel.Number = id
+	parcel.Number = int(id)
 
 	fmt.Printf("Новая посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s\n",
 		parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt)
@@ -58,6 +58,7 @@ func (s ParcelService) PrintClientParcels(client int) error {
 	}
 
 	fmt.Printf("Посылки клиента %d:\n", client)
+	//как пробежаться грамотно по списку посылок определенного заданного клиента?
 	for _, parcel := range parcels {
 		fmt.Printf("Посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s, статус %s\n",
 			parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt, parcel.Status)
@@ -68,7 +69,7 @@ func (s ParcelService) PrintClientParcels(client int) error {
 }
 
 func (s ParcelService) NextStatus(number int) error {
-	parcel, err := s.store.Get(number)
+	parcel, err := s.store.GetParcelByID(number)
 	if err != nil {
 		return err
 	}
@@ -97,9 +98,13 @@ func (s ParcelService) Delete(number int) error {
 }
 
 func main() {
-	// настройте подключение к БД
-
-	store := // создайте объект ParcelStore функцией NewParcelStore
+	db, err := sql.Open("sqlite", "demo.db")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer db.Close()
+	store := NewParcelStore(db) // создайте объект ParcelStore функцией NewParcelStore
 	service := NewParcelService(store)
 
 	// регистрация посылки
