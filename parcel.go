@@ -48,21 +48,17 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	p := Parcel{}
 	rows, err := s.db.Query("SELECT * FROM parcel WHERE client = :client", sql.Named("client", client))
-	for rows.Next() {
-		err = rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
+	if err != nil {
+		return []Parcel{}, err
 	}
 
 	var res []Parcel
-	for _, v := range res {
-		v.Number = p.Number
-		v.Client = p.Client
-		v.Status = p.Status
-		v.Address = p.Address
-		v.CreatedAt = p.CreatedAt
+	for rows.Next() {
+		p := Parcel{}
+		err = rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
+		if err != nil {
+			return []Parcel{}, err
+		}
 	}
 
 	return res, nil

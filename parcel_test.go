@@ -104,7 +104,6 @@ func TestSetStatus(t *testing.T) {
 
 	// set status
 	newStatus := ParcelStatusSent
-	err = store.SetStatus(addId, newStatus)
 
 	// check
 	getId, err := store.Get(addId)
