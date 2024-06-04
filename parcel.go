@@ -15,10 +15,9 @@ func NewParcelStore(db *sql.DB) ParcelStore {
 
 func (s ParcelStore) Add(p Parcel) (int64, error) {
 	// реализуйте добавление строки в таблицу parcel, используйте данные из переменной p
-	query := "INSERT INTO parcel VALUES (:number, :client, :status, :address, :createdAt)"
+	query := "INSERT INTO parcel (client, status, address, created_at) VALUES (:client, :status, :address, :createdAt)"
 
 	res, err := s.db.Exec(query,
-		sql.Named("number", p.Number),
 		sql.Named("client", p.Client),
 		sql.Named("status", p.Status),
 		sql.Named("address", p.Address),
@@ -51,10 +50,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	// заполните объект Parcel данными из таблицы
 	err = rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return p, errors.New("parcel not found")
-		}
-		return p, err
+		return Parcel{}, err
 	}
 	return p, nil
 }
