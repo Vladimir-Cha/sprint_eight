@@ -58,7 +58,6 @@ func (s ParcelService) PrintClientParcels(client int) error {
 	}
 
 	fmt.Printf("Посылки клиента %d:\n", client)
-	//как пробежаться грамотно по списку посылок определенного заданного клиента?
 	for _, parcel := range parcels {
 		fmt.Printf("Посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s, статус %s\n",
 			parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt, parcel.Status)
