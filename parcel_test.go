@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -33,7 +35,7 @@ func TestAddGetDelete(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "./tracker.db")
 	if err != nil {
-		require.NoError(t, err)
+		require.NoError(t, fmt.Errorf("failed to open database: %w", err))
 	}
 	defer db.Close()
 
@@ -43,14 +45,18 @@ func TestAddGetDelete(t *testing.T) {
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 	id, err := store.Add(parcel)
-	require.NoError(t, err)
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to add parcel: %w", err))
+	}
 	require.NotEmpty(t, id)
 
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	p, err := store.Get(int(id))
-	require.NoError(t, err)
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to get parcel: %w", err))
+	}
 
 	require.Equal(t, parcel.Client, p.Client)
 	require.Equal(t, parcel.Status, p.Status)
@@ -62,10 +68,14 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что посылку больше нельзя получить из БД
 
 	err = store.Delete(int(id))
-	require.NoError(t, err)
-
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to delete parcel: %w", err))
+	}
 	_, err = store.Get(int(id))
 	require.Error(t, err)
+	if err != nil {
+		require.True(t, errors.Is(err, sql.ErrNoRows), fmt.Errorf("expected sql.ErrNoRows, got %w", err))
+	}
 }
 
 // TestSetAddress проверяет обновление адреса
@@ -73,8 +83,9 @@ func TestSetAddress(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "./tracker.db")
 	if err != nil {
-		require.NoError(t, err)
+		require.NoError(t, fmt.Errorf("failed to open database: %w", err))
 	}
+
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -83,18 +94,24 @@ func TestSetAddress(t *testing.T) {
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 	id, err := store.Add(parcel)
-	require.NoError(t, err)
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to add parcel: %w", err))
+	}
 	require.NotEmpty(t, id)
 
 	// set address
 	// обновите адрес, убедитесь в отсутствии ошибки
 	newAddress := "new test address"
 	err = store.SetAddress(int(id), newAddress)
-	require.NoError(t, err)
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to set address: %w", err))
+	}
 	// check
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	p, err := store.Get(int(id))
-	require.NoError(t, err)
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to get parcel: %w", err))
+	}
 	require.Equal(t, newAddress, p.Address)
 }
 
@@ -103,8 +120,9 @@ func TestSetStatus(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "./tracker.db")
 	if err != nil {
-		require.NoError(t, err)
+		require.NoError(t, fmt.Errorf("failed to open database: %w", err))
 	}
+
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -113,18 +131,24 @@ func TestSetStatus(t *testing.T) {
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 	id, err := store.Add(parcel)
-	require.NoError(t, err)
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to add parcel: %w", err))
+	}
 	require.NotEmpty(t, id)
 
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
 	err = store.SetStatus(int(id), ParcelStatusSent)
-	require.NoError(t, err)
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to set status: %w", err))
+	}
 
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
 	p, err := store.Get(int(id))
-	require.NoError(t, err)
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to get parcel: %w", err))
+	}
 	require.Equal(t, ParcelStatusSent, p.Status)
 }
 
@@ -133,8 +157,9 @@ func TestGetByClient(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "./tracker.db")
 	if err != nil {
-		require.NoError(t, err)
+		require.NoError(t, fmt.Errorf("failed to open database: %w", err))
 	}
+
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -155,7 +180,9 @@ func TestGetByClient(t *testing.T) {
 	// add
 	for i := 0; i < len(parcels); i++ {
 		id, err := store.Add(parcels[i])
-		require.NoError(t, err) // добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
+		if err != nil {
+			require.NoError(t, fmt.Errorf("failed to add parcel: %w", err)) // добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
+		}
 		require.NotEmpty(t, id)
 		// обновляем идентификатор добавленной у посылки
 		parcels[i].Number = int(id)
@@ -170,7 +197,9 @@ func TestGetByClient(t *testing.T) {
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
 
 	storedParcels, err := store.GetByClient(client)
-	require.NoError(t, err)
+	if err != nil {
+		require.NoError(t, fmt.Errorf("failed to get parcels by client: %w", err))
+	}
 	require.Equal(t, len(parcels), len(storedParcels))
 
 	// check

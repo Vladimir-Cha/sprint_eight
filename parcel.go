@@ -40,9 +40,6 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	query := "SELECT number, client, status, address, created_at FROM parcel WHERE number = :number"
 	err := s.db.QueryRow(query, sql.Named("number", number)).Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return p, errors.New("parcel not found")
-		}
 		return p, err
 	}
 	return p, nil
