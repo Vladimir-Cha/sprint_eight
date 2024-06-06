@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"database/sql"
 	"database/sql"
 	"fmt"
 	"time"
@@ -104,7 +103,9 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	store := NewParcelStore(db) // создайте объект ParcelStore функцией NewParcelStore
+	defer db.Close()
+
+	store := NewParcelStore(db)
 	service := NewParcelService(store)
 
 	// регистрация посылки
