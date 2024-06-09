@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -32,14 +33,22 @@ func TestAdd(t *testing.T) {
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
-	par := getTestParcel()
-	_, err = store.Add(par)
+
+	id, err := store.Add(parcel)
 	require.NoError(t, err)
-	require.NotEmpty(t, par.Client)
-	assert.Equal(t, parcel.Client, par.Client)
-	assert.Equal(t, parcel.Status, par.Status)
-	assert.Equal(t, parcel.Address, par.Address)
-	assert.Equal(t, parcel.CreatedAt, par.CreatedAt)
+	require.NotEmpty(t, id)
+
+	parcels, err := store.GetParcelByID(id)
+	parcel.Number = parcels.Number
+	assert.NoError(t, err)
+	assert.Equal(t, parcel, parcel)
+
+	err = store.Delete(id)
+	require.NoError(t, err)
+	_, err = store.GetParcelByID(id)
+	if err != nil {
+		require.NoError(t, err)
+	}
 
 }
 
@@ -52,8 +61,9 @@ func TestGet(t *testing.T) {
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
-	_, err = store.GetByClient(parcel.Client)
+	parcels, err := store.GetByClient(parcel.Client)
 	require.NoError(t, err)
+	fmt.Println(parcels)
 }
 
 func TestDelete(t *testing.T) {
@@ -83,17 +93,16 @@ func TestSetAddress(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, id)
 	newAddress := "new test address"
-	err = store.SetAddress(par.Number, newAddress)
+	err = store.SetAddress(id, newAddress)
 	require.NoError(t, err)
-	_, err = store.GetByClient(par.Client)
-	require.Equal(t, par.Status, err)
+	line, err := store.GetParcelByID(id)
+	require.NoError(t, err)
+	require.Equal(t, newAddress, line.Address)
 
 }
 func TestGetByClient(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	defer db.Close()
 	store := NewParcelStore(db)
 	parcels := []Parcel{
@@ -103,6 +112,7 @@ func TestGetByClient(t *testing.T) {
 	}
 
 	parcelMap := map[int]Parcel{}
+
 	client := randRange.Intn(10_000_000)
 	parcels[0].Client = client
 	parcels[1].Client = client
@@ -110,25 +120,18 @@ func TestGetByClient(t *testing.T) {
 
 	for i := 0; i < len(parcels); i++ {
 		id, err := store.Add(parcels[i])
-		if err != nil {
-			require.NoError(t, err)
-		}
+		require.NoError(t, err)
+		require.NotEmpty(t, id)
+
 		parcels[i].Number = int(id)
 		parcelMap[int(id)] = parcels[i]
-
-		storedParcels, err := store.GetByClient(parcels[i].Client)
-		if err != nil {
-			require.NoError(t, err)
-		}
-		require.Equal(t, storedParcels, err)
-		for _, parcel := range parcelMap {
-			for _, par := range parcels {
-				assert.Equal(t, parcel, par)
-				assert.Equal(t, parcel.Client, par.Client)
-				assert.Equal(t, parcel.Status, par.Status)
-				assert.Equal(t, parcel.Address, par.Address)
-				assert.Equal(t, parcel.CreatedAt, par.CreatedAt)
-			}
-		}
+	}
+	storedParcels, err := store.GetByClient(client)
+	require.NoError(t, err)
+	assert.Equal(t, len(parcels), len(storedParcels))
+	require.NotEmpty(t, storedParcels)
+	for _, parcels := range storedParcels {
+		mapParcel := parcelMap[parcels.Number]
+		require.Equal(t, parcels, mapParcel)
 	}
 }

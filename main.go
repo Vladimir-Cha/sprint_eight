@@ -43,7 +43,7 @@ func (s ParcelService) Register(client int, address string) (Parcel, error) {
 		return parcel, err
 	}
 
-	parcel.Number = int(id)
+	parcel.Number = id
 
 	fmt.Printf("Новая посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s\n",
 		parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt)
@@ -97,7 +97,7 @@ func (s ParcelService) Delete(number int) error {
 }
 
 func main() {
-	db, err := sql.Open("sqlite", "demo.db")
+	db, err := sql.Open("sqlite", "tracker.db")
 	if err != nil {
 		fmt.Println(err)
 		return
