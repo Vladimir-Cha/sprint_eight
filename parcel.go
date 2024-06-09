@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors" // Для работы с ошибками
 )
 
 type ParcelStore struct {
@@ -88,46 +87,19 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// Проверяем статус посылки
-	var status string
-	err := s.db.QueryRow("SELECT status FROM parcel WHERE number = ?", number).Scan(&status)
-	if err != nil {
-		return err
-	}
+	_, err := s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number and status = :status",
+		sql.Named("status", ParcelStatusRegistered),
+		sql.Named("number", number),
+		sql.Named("address", address))
 
-	// Если статус посылки не равен "registered", возвращаем ошибку
-	if status != "registered" {
-		return errors.New("нельзя изменить адрес посылки с другим статусом")
-	}
-
-	// Выполняем запрос на обновление адреса в таблице parcel
-	_, err = s.db.Exec("UPDATE parcel SET address = ? WHERE number = ?", address, number)
-	if err != nil {
-		return err
-	}
-
-	// Возвращаем ошибку (если есть)
-	return nil
+	return err
 }
 
 func (s ParcelStore) Delete(number int) error {
 	// Проверяем статус посылки
-	var status string
-	err := s.db.QueryRow("SELECT status FROM parcel WHERE number = ?", number).Scan(&status)
-	if err != nil {
-		return err
-	}
+	_, err := s.db.Exec("DELETE FROM parcel WHERE number = :number and status = :status",
+		sql.Named("number", number),
+		sql.Named("status", ParcelStatusRegistered))
 
-	// Если статус посылки не равен "registered", возвращаем ошибку
-	if status != "registered" {
-		return errors.New("нельзя удалить посылку с другим статусом")
-	}
-
-	// Выполняем запрос на удаление строки из таблицы parcel
-	_, err = s.db.Exec("DELETE FROM parcel WHERE number = ?", number)
-	if err != nil {
-		return err
-	}
-
-	// Возвращаем ошибку (если есть)
-	return nil
+	return err
 }
