@@ -77,7 +77,7 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 		sql.Named("number", number),
 		sql.Named("status", ParcelStatusRegistered))
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	return nil
 }

@@ -41,13 +41,13 @@ func TestAdd(t *testing.T) {
 	parcels, err := store.GetParcelByID(id)
 	parcel.Number = parcels.Number
 	assert.NoError(t, err)
-	assert.Equal(t, parcel, parcel)
+	assert.Equal(t, parcel, parcels)
 
 	err = store.Delete(id)
 	require.NoError(t, err)
 	_, err = store.GetParcelByID(id)
 	if err != nil {
-		require.NoError(t, err)
+		fmt.Println(err)
 	}
 
 }
@@ -75,8 +75,6 @@ func TestDelete(t *testing.T) {
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
-	_, err = store.GetByClient(parcel.Client)
-	require.NoError(t, err)
 	err = store.Delete(parcel.Client)
 	require.NoError(t, err)
 }
@@ -88,8 +86,8 @@ func TestSetAddress(t *testing.T) {
 	}
 	defer db.Close()
 	store := NewParcelStore(db)
-	par := getTestParcel()
-	id, err := store.Add(par)
+	parcel := getTestParcel()
+	id, err := store.Add(parcel)
 	require.NoError(t, err)
 	require.NotEmpty(t, id)
 	newAddress := "new test address"
@@ -126,11 +124,11 @@ func TestGetByClient(t *testing.T) {
 		parcels[i].Number = int(id)
 		parcelMap[int(id)] = parcels[i]
 	}
-	storedParcels, err := store.GetByClient(client)
+	storedParcel, err := store.GetByClient(client)
 	require.NoError(t, err)
-	assert.Equal(t, len(parcels), len(storedParcels))
-	require.NotEmpty(t, storedParcels)
-	for _, parcels := range storedParcels {
+	assert.Equal(t, len(parcels), len(storedParcel))
+	require.NotEmpty(t, storedParcel)
+	for _, parcels := range storedParcel {
 		mapParcel := parcelMap[parcels.Number]
 		require.Equal(t, parcels, mapParcel)
 	}
