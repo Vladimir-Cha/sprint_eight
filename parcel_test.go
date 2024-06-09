@@ -24,11 +24,9 @@ func getTestParcel() Parcel {
 		CreatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 }
-func TestAdd(t *testing.T) {
+func TestAddGetDelete(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -54,9 +52,8 @@ func TestAdd(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
+
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -68,9 +65,8 @@ func TestGet(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
+
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -81,18 +77,21 @@ func TestDelete(t *testing.T) {
 
 func TestSetAddress(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
+
 	defer db.Close()
+
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 	id, err := store.Add(parcel)
+
 	require.NoError(t, err)
 	require.NotEmpty(t, id)
+
 	newAddress := "new test address"
 	err = store.SetAddress(id, newAddress)
 	require.NoError(t, err)
+
 	line, err := store.GetParcelByID(id)
 	require.NoError(t, err)
 	require.Equal(t, newAddress, line.Address)
@@ -101,7 +100,9 @@ func TestSetAddress(t *testing.T) {
 func TestGetByClient(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
+
 	defer db.Close()
+
 	store := NewParcelStore(db)
 	parcels := []Parcel{
 		getTestParcel(),
@@ -124,12 +125,14 @@ func TestGetByClient(t *testing.T) {
 		parcels[i].Number = int(id)
 		parcelMap[int(id)] = parcels[i]
 	}
+
 	storedParcel, err := store.GetByClient(client)
 	require.NoError(t, err)
 	assert.Equal(t, len(parcels), len(storedParcel))
 	require.NotEmpty(t, storedParcel)
-	for _, parcels := range storedParcel {
-		mapParcel := parcelMap[parcels.Number]
-		require.Equal(t, parcels, mapParcel)
+
+	for _, packages := range storedParcel {
+		mapParcel := parcelMap[packages.Number]
+		require.Equal(t, packages, mapParcel)
 	}
 }
