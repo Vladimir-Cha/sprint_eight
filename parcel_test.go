@@ -38,10 +38,10 @@ func TestAdd(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, id)
 
-	parcels, err := store.GetParcelByID(id)
-	parcel.Number = parcels.Number
+	reqParcel, err := store.GetParcelByID(id)
+	parcel.Number = reqParcel.Number
 	assert.NoError(t, err)
-	assert.Equal(t, parcel, parcels)
+	assert.Equal(t, parcel, reqParcel)
 
 	err = store.Delete(id)
 	require.NoError(t, err)
