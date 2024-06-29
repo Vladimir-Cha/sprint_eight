@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	_ "modernc.org/sqlite"
@@ -45,26 +46,23 @@ func TestAddGetDelete(t *testing.T) {
 	id, err := store.Add(parcel)
 	require.NoError(t, err)
 	require.NotEmpty(t, id)
-
+	parcel.Number = id
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
-	storedParcel, err := store.Get(id)
+	storedParcel, err := store.Get(parcel.Number)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Client, storedParcel.Client)
-	require.Equal(t, parcel.Status, storedParcel.Status)
-	require.Equal(t, parcel.Address, storedParcel.Address)
-	require.Equal(t, parcel.CreatedAt, storedParcel.CreatedAt)
+	assert.Equal(t, parcel, storedParcel)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
-	err = store.Delete(id)
+	err = store.Delete(parcel.Number)
 	require.NoError(t, err)
 
-	_, err = store.Get(id)
+	_, err = store.Get(parcel.Number)
 	require.Error(t, err)
-	require.Equal(t, sql.ErrNoRows, err)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
 }
 
 // TestSetAddress проверяет обновление адреса
@@ -93,7 +91,7 @@ func TestSetAddress(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	updatedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, newAddress, updatedParcel.Address)
+	assert.Equal(t, newAddress, updatedParcel.Address)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -172,12 +170,7 @@ func TestGetByClient(t *testing.T) {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		originalParcel, exists := parcelMap[parcel.Number]
-		require.True(t, exists)
-		require.Equal(t, originalParcel.Client, parcel.Client)
-		require.Equal(t, originalParcel.Status, parcel.Status)
-		require.Equal(t, originalParcel.Address, parcel.Address)
-		require.Equal(t, originalParcel.CreatedAt, parcel.CreatedAt)
+		assert.Equal(t, parcel, parcelMap[parcel.Number])
 	}
 
 }
