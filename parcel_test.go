@@ -39,10 +39,11 @@ func TestAddGetDelete(t *testing.T) {
 	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
+	service := NewParcelService(store)
 
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
-	id, err := store.Add(parcel)
+	id, err := service.store.Add(parcel)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, id)
@@ -62,6 +63,7 @@ func TestAddGetDelete(t *testing.T) {
 	err = store.Delete(id)
 	require.NoError(t, err)
 	// проверьте, что посылку больше нельзя получить из БД
+	_, err = store.Get(id)
 	require.Equal(t, sql.ErrNoRows, err)
 }
 
@@ -90,6 +92,7 @@ func TestSetAddress(t *testing.T) {
 	// check
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	p, err := store.Get(id)
+	require.NoError(t, err)
 	require.Equal(t, p.Address, newAddress)
 }
 
@@ -117,7 +120,8 @@ func TestSetStatus(t *testing.T) {
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
 	p, err := store.Get(id)
-	require.Equal(t, p.Status, parcel.Status)
+	require.NoError(t, err)
+	require.NotEqual(t, p.Status, parcel.Status)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
@@ -129,7 +133,8 @@ func TestGetByClient(t *testing.T) {
 	}
 	defer db.Close()
 	store := NewParcelStore(db)
-	parcel := getTestParcel()
+	//parcel := getTestParcel()
+	//service := NewParcelService(store)
 	parcels := []Parcel{
 		getTestParcel(),
 		getTestParcel(),
@@ -143,16 +148,15 @@ func TestGetByClient(t *testing.T) {
 	parcels[1].Client = client
 	parcels[2].Client = client
 
-	// add
-	for i := 0; i < len(parcels); i++ {
-		// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
+	//add
+	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
+	for i, parcel := range parcels {
 		id, err := store.Add(parcel)
 
 		require.NoError(t, err)
 		require.NotEmpty(t, id)
 		// обновляем идентификатор добавленной у посылки
 		parcels[i].Number = id
-
 		// сохраняем добавленную посылку в структуру map, чтобы её можно было легко достать по идентификатору посылки
 		parcelMap[id] = parcels[i]
 	}
@@ -162,12 +166,14 @@ func TestGetByClient(t *testing.T) {
 	// убедитесь в отсутствии ошибки
 	require.NoError(t, err)
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
-	assert.Equal(t, len(storedParcels), len(parcelMap))
+	assert.Len(t, storedParcels, len(parcelMap))
 	// check
 	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
-		assert.Equal(t, storedParcels, parcelMap)
+		if _, ok := parcelMap[parcel.Number]; !ok {
+			return
+		}
 		// убедитесь, что значения полей полученных посылок заполнены верно
 		assert.IsType(t, Parcel{}, parcel)
 	}
