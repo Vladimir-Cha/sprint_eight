@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -48,7 +49,7 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	checkParcel, err := store.Get(parcel.Number)
 	require.NoError(t, err)
-	require.Equal(t, checkParcel, parcel)
+	assert.Equal(t, checkParcel, parcel)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -56,8 +57,8 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	// проверьте, что посылку больше нельзя получить из БД
-	p, _ := store.Get(parcel.Number)
-	require.Empty(t, p)
+	_, err = store.Get(parcel.Number)
+	require.Equal(t, err, sql.ErrNoRows)
 }
 
 // TestSetAddress проверяет обновление адреса
