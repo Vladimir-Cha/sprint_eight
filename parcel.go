@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 )
 
 type ParcelStore struct {
@@ -37,8 +38,20 @@ func (store ParcelStore) GetParcel(id int) (Parcel, error) {
 
 // DeleteParcel удаляет посылку из базы данных по идентификатору
 func (store ParcelStore) DeleteParcel(id int) error {
-	query := `DELETE FROM parcel WHERE number = ?`
-	_, err := store.db.Exec(query, id)
+
+	var status string
+	query := `SELECT status FROM parcel WHERE number = ?`
+	err := store.db.QueryRow(query, id).Scan(&status)
+	if err != nil {
+		return err
+	}
+
+	if status != "cancelled" {
+		return errors.New("cannot delete parcel with status other than 'cancelled'")
+	}
+
+	query = `DELETE FROM parcel WHERE number = ?`
+	_, err = store.db.Exec(query, id)
 	return err
 }
 
@@ -50,9 +63,39 @@ func (store ParcelStore) SetAddress(id int, address string) error {
 }
 
 // SetStatus обновляет статус посылки в базе данных
-func (store ParcelStore) SetStatus(id int, status string) error {
-	query := `UPDATE parcel SET status = ? WHERE number = ?`
-	_, err := store.db.Exec(query, status, id)
+func (store ParcelStore) SetStatus(id int, newStatus string) error {
+
+	validTransitions := map[string][]string{
+		"created":   {"shipped", "cancelled"},
+		"shipped":   {"delivered"},
+		"delivered": {},
+		"cancelled": {},
+	}
+
+	var currentStatus string
+	query := `SELECT status FROM parcel WHERE number = ?`
+	err := store.db.QueryRow(query, id).Scan(&currentStatus)
+	if err != nil {
+		return err
+	}
+
+	validNextStatuses, exists := validTransitions[currentStatus]
+	if !exists {
+		return errors.New("invalid current status")
+	}
+	isValidTransition := false
+	for _, status := range validNextStatuses {
+		if status == newStatus {
+			isValidTransition = true
+			break
+		}
+	}
+	if !isValidTransition {
+		return errors.New("invalid status transition")
+	}
+
+	query = `UPDATE parcel SET status = ? WHERE number = ?`
+	_, err = store.db.Exec(query, newStatus, id)
 	return err
 }
 
@@ -74,5 +117,11 @@ func (store ParcelStore) GetParcelsByClient(client int) ([]Parcel, error) {
 		}
 		parcels = append(parcels, parcel)
 	}
+
+	// Check for errors during iteration
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return parcels, nil
 }

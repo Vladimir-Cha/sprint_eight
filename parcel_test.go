@@ -7,6 +7,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,14 +43,12 @@ func TestAddGetDelete(t *testing.T) {
 	// add
 	id, err := store.AddParcel(parcel)
 	require.NoError(t, err)
-	require.NotZero(t, id)
+	require.Greater(t, id, 0)
 
 	// get
 	storedParcel, err := store.GetParcel(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Client, storedParcel.Client)
-	require.Equal(t, parcel.Status, storedParcel.Status)
-	require.Equal(t, parcel.Address, storedParcel.Address)
+	assert.Equal(t, parcel, storedParcel)
 
 	// delete
 	err = store.DeleteParcel(id)
@@ -57,7 +56,7 @@ func TestAddGetDelete(t *testing.T) {
 
 	// check deletion
 	_, err = store.GetParcel(id)
-	require.Error(t, err)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
 }
 
 // TestSetAddress проверяет обновление адреса
@@ -73,17 +72,17 @@ func TestSetAddress(t *testing.T) {
 	// add
 	id, err := store.AddParcel(parcel)
 	require.NoError(t, err)
-	require.NotZero(t, id)
+	require.Greater(t, id, 0)
 
-	// set address
+	// update address
 	newAddress := "new test address"
 	err = store.SetAddress(id, newAddress)
 	require.NoError(t, err)
 
-	// check
+	// get updated parcel
 	storedParcel, err := store.GetParcel(id)
 	require.NoError(t, err)
-	require.Equal(t, newAddress, storedParcel.Address)
+	assert.Equal(t, newAddress, storedParcel.Address)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -96,17 +95,14 @@ func TestSetStatus(t *testing.T) {
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
-	// add
 	id, err := store.AddParcel(parcel)
 	require.NoError(t, err)
 	require.NotZero(t, id)
 
-	// set status
 	newStatus := ParcelStatusDelivered
 	err = store.SetStatus(id, newStatus)
 	require.NoError(t, err)
 
-	// check
 	storedParcel, err := store.GetParcel(id)
 	require.NoError(t, err)
 	require.Equal(t, newStatus, storedParcel.Status)
@@ -114,7 +110,7 @@ func TestSetStatus(t *testing.T) {
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
 func TestGetByClient(t *testing.T) {
-	// prepare
+
 	db, err := sql.Open("postgres", "user=username dbname=mydb sslmode=disable")
 	require.NoError(t, err)
 	defer db.Close()
@@ -134,7 +130,6 @@ func TestGetByClient(t *testing.T) {
 	parcels[1].Client = client
 	parcels[2].Client = client
 
-	// add
 	for i := 0; i < len(parcels); i++ {
 		id, err := store.AddParcel(parcels[i])
 		require.NoError(t, err)
