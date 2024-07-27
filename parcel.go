@@ -103,14 +103,3 @@ func (s ParcelStore) Delete(number int) error {
 	}
 	return nil
 }
-
-func (s ParcelStore) Count() (int, error) {
-	// реализуйте подсчет количества строк в таблице parcel
-	var count int
-	row := s.db.QueryRow("SELECT COUNT(*) FROM parcel")
-	err := row.Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
-}
