@@ -61,6 +61,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		if err != nil {
 			return res, err
 		}
+		err = rows.Err()
+		if err != nil {
+			return res, err
+		}
 		res = append(res, p)
 	}
 
@@ -98,4 +102,15 @@ func (s ParcelStore) Delete(number int) error {
 		return err
 	}
 	return nil
+}
+
+func (s ParcelStore) Count() (int, error) {
+	// реализуйте подсчет количества строк в таблице parcel
+	var count int
+	row := s.db.QueryRow("SELECT COUNT(*) FROM parcel")
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
