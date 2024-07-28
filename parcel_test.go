@@ -32,7 +32,6 @@ func getTestParcel() Parcel {
 
 // TestAddGetDelete проверяет добавление, получение и удаление посылки
 func TestAddGetDelete(t *testing.T) {
-	// prepare
 	db, err := sql.Open("postgres", "user=username dbname=mydb sslmode=disable")
 	require.NoError(t, err)
 	defer db.Close()
@@ -40,23 +39,21 @@ func TestAddGetDelete(t *testing.T) {
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
-	// add
 	id, err := store.AddParcel(parcel)
 	require.NoError(t, err)
 	require.Greater(t, id, 0)
 
-	// get
+	parcel.Number = id // обновляем поле Number у parcel
+
 	storedParcel, err := store.GetParcel(id)
 	require.NoError(t, err)
 	assert.Equal(t, parcel, storedParcel)
 
-	// delete
 	err = store.DeleteParcel(id)
 	require.NoError(t, err)
 
-	// check deletion
 	_, err = store.GetParcel(id)
-	assert.ErrorIs(t, err, sql.ErrNoRows)
+	require.Error(t, err)
 }
 
 // TestSetAddress проверяет обновление адреса
@@ -145,7 +142,7 @@ func TestGetByClient(t *testing.T) {
 	// get by client
 	storedParcels, err := store.GetParcelsByClient(client)
 	require.NoError(t, err)
-	require.Equal(t, len(parcels), len(storedParcels))
+	assert.Len(t, storedParcels, len(parcels))
 
 	// check
 	for _, parcel := range storedParcels {

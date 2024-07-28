@@ -38,28 +38,42 @@ func (store ParcelStore) GetParcel(id int) (Parcel, error) {
 
 // DeleteParcel удаляет посылку из базы данных по идентификатору
 func (store ParcelStore) DeleteParcel(id int) error {
-
-	var status string
-	query := `SELECT status FROM parcel WHERE number = ?`
-	err := store.db.QueryRow(query, id).Scan(&status)
+	query := `DELETE FROM parcel WHERE number = $1 AND status = 'cancelled'`
+	result, err := store.db.Exec(query, id)
 	if err != nil {
 		return err
 	}
 
-	if status != "cancelled" {
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
 		return errors.New("cannot delete parcel with status other than 'cancelled'")
 	}
 
-	query = `DELETE FROM parcel WHERE number = ?`
-	_, err = store.db.Exec(query, id)
-	return err
+	return nil
 }
 
 // SetAddress обновляет адрес посылки в базе данных
 func (store ParcelStore) SetAddress(id int, address string) error {
-	query := `UPDATE parcel SET address = ? WHERE number = ?`
-	_, err := store.db.Exec(query, address, id)
-	return err
+	query := `UPDATE parcel SET address = $1 WHERE number = $2 AND status != 'registered'`
+	result, err := store.db.Exec(query, address, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("cannot update address for parcel with 'registered' status")
+	}
+
+	return nil
 }
 
 // SetStatus обновляет статус посылки в базе данных
