@@ -60,6 +60,7 @@ func TestAddGetDelete(t *testing.T) {
 	// Check deletion
 	_, err = store.Get(id)
 	assert.Error(t, err)
+	assert.ErrorIs(t, err, sql.ErrNoRows) // Проверка типа ошибки
 }
 
 // TestSetAddress проверяет обновление адреса
@@ -156,9 +157,6 @@ func TestGetByClient(t *testing.T) {
 	for _, parcel := range storedParcels {
 		expectedParcel, exists := parcelMap[parcel.Number]
 		require.True(t, exists)
-		assert.Equal(t, expectedParcel.Client, parcel.Client)
-		assert.Equal(t, expectedParcel.Status, parcel.Status)
-		assert.Equal(t, expectedParcel.Address, parcel.Address)
-		assert.Equal(t, expectedParcel.CreatedAt, parcel.CreatedAt)
+		assert.Equal(t, expectedParcel, parcel) // Сравнение всей структуры Parcel целиком
 	}
 }

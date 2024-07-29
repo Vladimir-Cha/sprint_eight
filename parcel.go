@@ -33,9 +33,9 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	var p Parcel
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		return p, err
+		return Parcel{}, err // Возвращаем пустую структуру и ошибку
 	}
-	return p, nil
+	return p, nil // Возвращаем объект Parcel и nil, если ошибок нет
 }
 
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
@@ -55,6 +55,11 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		}
 		parcels = append(parcels, p)
 	}
+	// Проверка наличия ошибок при обработке курсора
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return parcels, nil
 }
 
