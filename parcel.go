@@ -13,12 +13,12 @@ func NewParcelStore(db *sql.DB) ParcelStore {
 }
 
 func (s ParcelStore) Add(p Parcel) (int, error) {
-	query := `INSERT INTO parcels (client, status, address, created_at) VALUES (?, ?, ?, ?)`
-	result, err := s.db.Exec(query, p.Client, p.Status, p.Address, p.CreatedAt)
+	query := "INSERT INTO parcel (client, status, address, created_at) VALUES (?, ?, ?, ?)"
+	res, err := s.db.Exec(query, p.Client, p.Status, p.Address, p.CreatedAt)
 	if err != nil {
 		return 0, err
 	}
-	id, err := result.LastInsertId()
+	id, err := res.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
@@ -27,8 +27,8 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 
 func (s ParcelStore) Get(number int) (Parcel, error) {
 	p := Parcel{}
-	row := s.db.QueryRow("SELECT number, client, status, address, created_at FROM parcel WHERE number = :id",
-		sql.Named("id", number))
+	query := "SELECT number, client, status, address, created_at FROM parcel WHERE number = ?"
+	row := s.db.QueryRow(query, number)
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
 		return Parcel{}, err
@@ -37,7 +37,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 }
 
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
-	query := `SELECT number, client, status, address, created_at FROM parcels WHERE client = ?`
+	query := "SELECT number, client, status, address, created_at FROM parcel WHERE client = ?"
 	rows, err := s.db.Query(query, client)
 	if err != nil {
 		return nil, err
@@ -52,32 +52,29 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		}
 		res = append(res, p)
 	}
+
+	// Проверка на ошибки курсора
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return res, nil
 }
 
 func (s ParcelStore) SetStatus(number int, status string) error {
-	query := `UPDATE parcels SET status = ? WHERE number = ?`
+	query := "UPDATE parcel SET status = ? WHERE number = ?"
 	_, err := s.db.Exec(query, status, number)
 	return err
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
-	_, err := s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number AND status = :status",
-		sql.Named("address", address),
-		sql.Named("number", number),
-		sql.Named("status", ParcelStatusRegistered))
-	if err != nil {
-		return err
-	}
-	return nil
+	query := "UPDATE parcel SET address = ? WHERE number = ? AND status = ?"
+	_, err := s.db.Exec(query, address, number, ParcelStatusRegistered)
+	return err
 }
 
 func (s ParcelStore) Delete(number int) error {
-	_, err := s.db.Exec("DELETE FROM parcel WHERE number = :number AND status = :status",
-		sql.Named("number", number),
-		sql.Named("status", ParcelStatusRegistered))
-	if err != nil {
-		return err
-	}
-	return nil
+	query := "DELETE FROM parcel WHERE number = ? AND status = ?"
+	_, err := s.db.Exec(query, number, ParcelStatusRegistered)
+	return err
 }

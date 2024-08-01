@@ -27,6 +27,7 @@ func getTestParcel() Parcel {
 func TestAddGetDelete(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 	id, err := store.Add(parcel)
@@ -34,25 +35,28 @@ func TestAddGetDelete(t *testing.T) {
 	require.Greater(t, id, 0)
 
 	parcel.Number = id
+
 	parc, err := store.Get(parcel.Number)
 	assert.NoError(t, err)
 	assert.Equal(t, parcel, parc)
+
 	err = store.Delete(parcel.Number)
 	require.NoError(t, err)
 
 	_, err = store.Get(parcel.Number)
 	require.Error(t, err)
+
 }
 
 func TestSetAddress(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 	id, err := store.Add(parcel)
 	require.NoError(t, err)
 	require.Greater(t, id, 0)
-
 	parcel.Number = id
 	newAddress := "new test address"
 	err = store.SetAddress(parcel.Number, newAddress)
@@ -65,6 +69,7 @@ func TestSetAddress(t *testing.T) {
 func TestSetStatus(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 	id, err := store.Add(parcel)
@@ -80,13 +85,16 @@ func TestSetStatus(t *testing.T) {
 
 func TestGetByClient(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
-	require.NoError(t, err) // настройте подключение к БД
+	require.NoError(t, err)
+	defer db.Close()
 	store := NewParcelStore(db)
+
 	parcels := []Parcel{
 		getTestParcel(),
 		getTestParcel(),
 		getTestParcel(),
 	}
+
 	client := randRange.Intn(10_000_000)
 	parcels[0].Client = client
 	parcels[1].Client = client
@@ -96,9 +104,12 @@ func TestGetByClient(t *testing.T) {
 		id, err := store.Add(parcels[i])
 		require.NoError(t, err)
 		require.Greater(t, id, 0)
+
 		parcels[i].Number = id
 	}
+
 	storedParcels, err := store.GetByClient(client)
+	require.NoError(t, err)
 	require.Equal(t, len(parcels), len(storedParcels))
 
 	assert.ElementsMatch(t, storedParcels, parcels)
