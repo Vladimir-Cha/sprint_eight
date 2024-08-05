@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	_ "modernc.org/sqlite"
 )
 
 var (
@@ -112,5 +113,14 @@ func TestGetByClient(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, len(parcels), len(storedParcels))
 
-	assert.ElementsMatch(t, storedParcels, parcels)
+	parcelMap := make(map[int]Parcel)
+	for _, p := range parcels {
+		parcelMap[p.Number] = p
+	}
+
+	for _, parcel := range storedParcels {
+		expectedParcel, exists := parcelMap[parcel.Number]
+		require.True(t, exists, "Посылка с ID %d не найдена в мапе", parcel.Number)
+		require.Equal(t, expectedParcel, parcel, "Данные посылки с ID %d не совпадают", parcel.Number)
+	}
 }
