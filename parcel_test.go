@@ -46,16 +46,20 @@ func TestAddGetDelete(t *testing.T) {
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
-	got, err := store.Get(parcel.Number)
+	got, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel, got)
+	require.Equal(t, id, got.Number)
+	require.Equal(t, parcel.Client, got.Client)
+	require.Equal(t, parcel.Status, got.Status)
+	require.Equal(t, parcel.Address, got.Address)
+	require.Equal(t, parcel.CreatedAt, got.CreatedAt)
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
-	err = store.Delete(parcel.Number)
+	err = store.Delete(id)
 	require.NoError(t, err)
 
-	_, err = store.Get(parcel.Number)
+	_, err = store.Get(id)
 	require.Error(t, err)
 }
 
@@ -78,13 +82,13 @@ func TestSetAddress(t *testing.T) {
 	// обновите адрес, убедитесь в отсутствии ошибки
 	newAddress := "new test address"
 
-	err = store.SetAddress(parcel.Number, newAddress)
+	err = store.SetAddress(id, newAddress)
 	require.NoError(t, err)
 	// check
 	// получите добавленную посылку и убедитесь, что адрес обновился
-	_, err = store.Get(parcel.Number)
+	res, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Address, newAddress)
+	require.Equal(t, newAddress, res.Address)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -104,13 +108,13 @@ func TestSetStatus(t *testing.T) {
 	require.NotEmpty(t, id)
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
-	err = store.SetStatus(parcel.Number, ParcelStatusSent)
+	err = store.SetStatus(id, ParcelStatusSent)
 	require.NoError(t, err)
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
-	_, err = store.Get(parcel.Number)
+	res, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Status, ParcelStatusSent)
+	require.Equal(t, ParcelStatusSent, res.Status)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
