@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,7 +45,7 @@ func TestAddGetDelete(t *testing.T) {
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
-	get, err := store.Get(int(id))
+	get, err := store.Get(id)
 	require.NoError(t, err)
 	parcel.Number = int(id)
 	require.Equal(t, parcel, get)
@@ -53,9 +54,9 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что посылку больше нельзя получить из БД
 	err = store.Delete(int(id))
 	require.NoError(t, err)
-	get, err = store.Get(int(id))
+	_, err = store.Get(int(id))
 	require.Error(t, err)
-	require.Empty(t, get)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
 }
 
 // TestSetAddress проверяет обновление адреса
@@ -81,7 +82,7 @@ func TestSetAddress(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	res, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, newAddress, res.Address)
+	assert.Equal(t, newAddress, res.Address)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -153,8 +154,9 @@ func TestGetByClient(t *testing.T) {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		value, ok := parcelMap[parcel.Number]
+		_, ok := parcelMap[parcel.Number]
 		require.True(t, ok)
-		require.Equal(t, value, parcel)
+		assert.Contains(t, parcelMap, parcel.Number)
+		assert.Equal(t, parcelMap[parcel.Number], parcel)
 	}
 }
