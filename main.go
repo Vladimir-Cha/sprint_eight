@@ -15,7 +15,7 @@ const (
 )
 
 type Parcel struct {
-	Number    int64
+	Number    int
 	Client    int
 	Status    string
 	Address   string
@@ -43,7 +43,7 @@ func (s ParcelService) Register(client int, address string) (Parcel, error) {
 		return parcel, err
 	}
 
-	parcel.Number = id
+	parcel.Number = int(id)
 
 	fmt.Printf("Новая посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s\n",
 		parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"log"
 )
 
 type ParcelStore struct {
@@ -62,6 +63,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		if err != nil {
 			return nil, err
 		}
+		err = rows.Err()
+		if err != nil {
+			log.Fatal(err)
+		}
 		res = append(res, p)
 	}
 
@@ -70,10 +75,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 
 func (s ParcelStore) SetStatus(number int, status string) error {
 	// реализуйте обновление статуса в таблице parcel
-	_, nil := s.db.Exec("UPDATE parcel SET status = :status WHERE number = :number",
+	_, err := s.db.Exec("UPDATE parcel SET status = :status WHERE number = :number",
 		sql.Named("status", status),
 		sql.Named("number", number))
-	return nil
+	return err
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
