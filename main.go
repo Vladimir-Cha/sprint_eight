@@ -43,7 +43,7 @@ func (s ParcelService) Register(client int, address string) (Parcel, error) {
 		return parcel, err
 	}
 
-	parcel.Number = int(id)
+	parcel.Number = id
 
 	fmt.Printf("Новая посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s\n",
 		parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt)
@@ -119,14 +119,14 @@ func main() {
 
 	// изменение адреса
 	newAddress := "Саратов, д. Верхние Зори, ул. Козлова, д. 25"
-	err = service.ChangeAddress(int(p.Number), newAddress)
+	err = service.ChangeAddress(p.Number, newAddress)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	// изменение статуса
-	err = service.NextStatus(int(p.Number))
+	err = service.NextStatus(p.Number)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -140,7 +140,7 @@ func main() {
 	}
 
 	// попытка удаления отправленной посылки
-	err = service.Delete(int(p.Number))
+	err = service.Delete(p.Number)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -162,7 +162,7 @@ func main() {
 	}
 
 	// удаление новой посылки
-	err = service.Delete(int(p.Number))
+	err = service.Delete(p.Number)
 	if err != nil {
 		fmt.Println(err)
 		return

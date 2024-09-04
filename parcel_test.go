@@ -40,10 +40,13 @@ func TestAddGetDelete(t *testing.T) {
 
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
+	var id int
 
-	_, err = store.Add(parcel)
+	id, err = store.Add(parcel)
 	require.NoError(t, err)
 	require.NotEmpty(t, parcel)
+
+	parcel.Number = id
 
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
@@ -52,19 +55,15 @@ func TestAddGetDelete(t *testing.T) {
 
 	retrievedParcel, err = store.Get(parcel.Number)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Number, retrievedParcel.Number)
-	require.Equal(t, parcel.Client, retrievedParcel.Client)
-	require.Equal(t, parcel.Status, retrievedParcel.Status)
-	require.Equal(t, parcel.Address, retrievedParcel.Address)
-	require.Equal(t, parcel.CreatedAt, retrievedParcel.CreatedAt)
+	require.Equal(t, parcel, retrievedParcel)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
-	err = store.Delete(int(parcel.Number))
+	err = store.Delete(parcel.Number)
 	require.NoError(t, err)
 
-	_, err = store.Get(int(parcel.Number))
+	_, err = store.Get(parcel.Number)
 	require.Error(t, err)
 
 }
@@ -89,14 +88,14 @@ func TestSetAddress(t *testing.T) {
 	// обновите адрес, убедитесь в отсутствии ошибки
 	newAddress := "new test address"
 
-	err = store.SetAddress(int(parcel.Number), newAddress)
+	err = store.SetAddress(parcel.Number, newAddress)
 	require.NoError(t, err)
 
 	// check
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	var retrievedParcel Parcel
 
-	retrievedParcel, err = store.Get(int(parcel.Number))
+	retrievedParcel, err = store.Get(parcel.Number)
 
 	require.NoError(t, err)
 	require.Equal(t, newAddress, retrievedParcel.Address)
@@ -123,14 +122,14 @@ func TestSetStatus(t *testing.T) {
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
 
-	err = store.SetStatus(int(parcel.Number), ParcelStatusSent)
+	err = store.SetStatus(parcel.Number, ParcelStatusSent)
 	require.NoError(t, err)
 
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
 	var retrievedParcel Parcel
 
-	retrievedParcel, err = store.Get(int(parcel.Number))
+	retrievedParcel, err = store.Get(parcel.Number)
 	require.NoError(t, err)
 
 	require.Equal(t, ParcelStatusSent, retrievedParcel.Status)
@@ -179,9 +178,9 @@ func TestGetByClient(t *testing.T) {
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
 	storedParcels, err := store.GetByClient(client)
 	require.NoError(t, err)
-	for _, parcel := range storedParcels {
-		require.Equal(t, parcelMap[int(parcel.Number)], parcel)
-	}
+	require.NotEmpty(t, storedParcels)
+
+	require.Equal(t, len(storedParcels), len(parcels))
 
 	// check
 	for _, parcel := range storedParcels {
