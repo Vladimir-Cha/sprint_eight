@@ -79,14 +79,16 @@ func TestSetAddress(t *testing.T) {
 	parcel := getTestParcel()
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
+	var id int
 
-	_, err = store.Add(parcel)
+	id, err = store.Add(parcel)
 	require.NoError(t, err)
 	require.NotEmpty(t, parcel)
 
 	// set address
 	// обновите адрес, убедитесь в отсутствии ошибки
 	newAddress := "new test address"
+	parcel.Number = id
 
 	err = store.SetAddress(parcel.Number, newAddress)
 	require.NoError(t, err)
@@ -121,6 +123,7 @@ func TestSetStatus(t *testing.T) {
 
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
+	parcel.Number = id
 
 	err = store.SetStatus(parcel.Number, ParcelStatusSent)
 	require.NoError(t, err)
@@ -187,10 +190,9 @@ func TestGetByClient(t *testing.T) {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		require.Equal(t, parcel.Client, parcelMap[int(parcel.Number)].Client)
-		require.Equal(t, parcel.Status, parcelMap[int(parcel.Number)].Status)
-		require.Equal(t, parcel.Address, parcelMap[int(parcel.Number)].Address)
-		require.Equal(t, parcel.CreatedAt, parcelMap[int(parcel.Number)].CreatedAt)
+		val, ok := parcelMap[int(parcel.Number)]
+		require.True(t, ok)
+		require.Equal(t, parcel, val)
 
 	}
 }
