@@ -36,32 +36,17 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 func (s ParcelStore) Get(number int) (Parcel, error) {
 	// реализуйте чтение строки по заданному number
 	// здесь из таблицы должна вернуться только одна строка
-	var (
-		client     int
-		status     string
-		address    string
-		created_at string
-	)
-	row := s.db.QueryRow("SELECT client, status, address, created_at FROM parcel WHERE number = :number", sql.Named("number", number))
-	err := row.Scan(&client, &status, &address, &created_at)
+	p := Parcel{}
+	row := s.db.QueryRow("SELECT number, client, status, address, created_at FROM parcel WHERE number = :number", sql.Named("number", number))
+	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
 		fmt.Println(err)
 		return Parcel{}, err
-	}
-	// заполните объект Parcel данными из таблицы
-	p := Parcel{
-		Number:    number,
-		Client:    client,
-		Status:    status,
-		Address:   address,
-		CreatedAt: created_at,
 	}
 	return p, nil
 }
 
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
-	// реализуйте чтение строк из таблицы parcel по заданному client
-	// здесь из таблицы может вернуться несколько строк
 	rows, err := s.db.Query("SELECT number, status, address, created_at FROM parcel WHERE client = :client", sql.Named("client", client))
 	if err != nil {
 		fmt.Println(err)
@@ -80,9 +65,14 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 			fmt.Println(err)
 			return nil, err
 		}
-		// заполните срез Parcel данными из таблицы
 		res = append(res, parcel)
 	}
+
+	if err := rows.Err(); err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
 	return res, nil
 }
 
