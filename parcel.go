@@ -96,19 +96,9 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 }
 
 func (s ParcelStore) Delete(number int) error {
-	parcel, err := s.Get(number)
-	if err != nil {
-		return err
-	}
-
-	if parcel.Status != ParcelStatusRegistered {
-		return errors.New(fmt.Sprintf(
-			"invalid parcel status\nactual: %s\nexpected: %s",
-			parcel.Status,
-			ParcelStatusRegistered))
-	}
-
-	_, err = s.db.Exec("DELETE FROM parcel WHERE number = :number", sql.Named("number", number))
+	_, err := s.db.Exec("DELETE FROM parcel WHERE number = :number AND status = :status",
+		sql.Named("number", number),
+		sql.Named("status", ParcelStatusRegistered))
 	if err != nil {
 		return err
 	}
