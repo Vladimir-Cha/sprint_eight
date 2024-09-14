@@ -2,8 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
-	"fmt"
 )
 
 type ParcelStore struct {
@@ -49,6 +47,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var res []Parcel
 	for rows.Next() {
@@ -58,6 +57,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 			return nil, err
 		}
 		res = append(res, p)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
 	}
 
 	return res, nil
@@ -75,20 +78,10 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
-	parcel, err := s.Get(number)
-	if err != nil {
-		return err
-	}
-
-	if parcel.Status != ParcelStatusRegistered {
-		return errors.New(fmt.Sprintf(
-			"invalid parcel status\nactual: %s\nexpected: %s",
-			parcel.Status,
-			ParcelStatusRegistered))
-	}
-	_, err = s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number",
+	_, err := s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number AND status = :status",
 		sql.Named("address", address),
-		sql.Named("number", number))
+		sql.Named("number", number),
+		sql.Named("status", ParcelStatusRegistered))
 	if err != nil {
 		return err
 	}
