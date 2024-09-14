@@ -136,7 +136,7 @@ func TestGetByClient(t *testing.T) {
 
 	for _, parcel := range storedParcels {
 		_, ok := parcelMap[parcel.Number]
-		assert.Equal(t, true, ok)
+		assert.True(t, ok)
 		assert.Equal(t, parcel, parcelMap[parcel.Number])
 	}
 }
