@@ -108,7 +108,7 @@ func main() {
 	// регистрация посылки
 	client := 1
 	address := "Псков, д. Пушкина, ул. Колотушкина, д. 5"
-	db.Exec("DELETE from parcel")
+
 	p, err := service.Register(client, address)
 	if err != nil {
 		fmt.Println(err)
