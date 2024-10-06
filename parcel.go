@@ -36,7 +36,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt) // Обратите внимание на '&'
 
 	if err != nil {
-		return p, err
+		return Parcel{}, err
 	}
 	return p, nil
 }
@@ -74,27 +74,34 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
-	parcel, err := s.Get(number)
+	result, err := s.db.Exec("UPDATE parcel SET address = ? WHERE number = ? AND status = ?", address, number, ParcelStatusRegistered)
 	if err != nil {
 		return err
 	}
-	if parcel.Status != ParcelStatusRegistered {
-		return fmt.Errorf("it is not possible to change the address for the parcel with the number %d, because its status %s", number, parcel.Status)
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
 	}
-	_, err = s.db.Exec("UPDATE parcel SET address = ? WHERE number = ?", address, number)
-	return err
+	if rowsAffected == 0 {
+		return fmt.Errorf("you cannot change the address for a parcel with the number %d, because its status is not '%s'", number, ParcelStatusRegistered)
+	}
+
+	return nil
 }
 
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
-	parcel, err := s.Get(number)
+	result, err := s.db.Exec("DELETE FROM parcel WHERE number = ? AND status = ?", number, ParcelStatusRegistered)
 	if err != nil {
 		return err
 	}
-	if parcel.Status != ParcelStatusRegistered {
-		return fmt.Errorf("the package with the number %d cannot be deleted because its status is %s", number, parcel.Status)
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
 	}
-	_, err = s.db.Exec("DELETE FROM parcel WHERE number = ?", number)
-	return err
+	if rowsAffected == 0 {
+		return fmt.Errorf("the package with the number %d cannot be deleted because its status is %s", number, ParcelStatusRegistered)
+	}
+	return nil
 }
