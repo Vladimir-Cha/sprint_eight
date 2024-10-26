@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -92,24 +93,74 @@ func TestSetStatus(t *testing.T) {
 	require.NoError(t, err)
 	require.Greater(t, id, 0)
 
-	// Изменяем статус посылки
+	// достмвляем
 	err = store.SetStatus(id, ParcelStatusSent)
 	require.NoError(t, err)
 
-	// Проверяем новый статус
+	// проверяем статус
 	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
 	require.Equal(t, ParcelStatusSent, storedParcel.Status)
 
-	// Пытаемся удалить посылку
+	// удвляем
 	err = store.Delete(id)
-	require.Error(t, err) // ожидаем ошибку, т.к. статус не "registered"
+	require.Error(t, err) // ожидаем ошибку, т.к. статус не registered
 
-	// Возвращаем статус в "registered", чтобы можно было удалить
+	// ставим registred чтобы удалить
 	err = store.SetStatus(id, ParcelStatusRegistered)
 	require.NoError(t, err)
 
-	// Теперь удаляем посылку
+	// точно удаляем
 	err = store.Delete(id)
 	require.NoError(t, err)
+}
+
+func TestGetByClient(t *testing.T) {
+	// Подключение к бд
+	db, err := sql.Open("sqlite3", "tracker.db")
+	require.NoError(t, err)
+	defer db.Close()
+
+	store := NewParcelStore(db)
+
+	// Очистка таблицы перед тестом
+	_, err = db.Exec("DELETE FROM parcel")
+	require.NoError(t, err)
+
+	// тестовые
+	parcels := []Parcel{
+		getTestParcel(),
+		getTestParcel(),
+		getTestParcel(),
+	}
+
+	clientID := rand.Intn(100500) // рандомный ID клиента
+	for i := range parcels {
+		parcels[i].Client = clientID // присваиваем этот id всем поссылкам
+	}
+
+	// Добавление посылок в бд и заполнение
+	parcelMap := map[int]Parcel{}
+	for _, parcel := range parcels {
+		id, err := store.Add(parcel)
+		require.NoError(t, err)
+		parcelMap[id] = parcel
+	}
+
+	// GetByClient
+	returnedParcels, err := store.GetByClient(clientID)
+	require.NoError(t, err)
+
+	// Проверка кол-ва записей
+	require.Len(t, returnedParcels, len(parcels))
+
+	// Проверка на соответсвие
+	for _, returnedParcel := range returnedParcels {
+		expectedParcel, exists := parcelMap[returnedParcel.Number]
+		require.True(t, exists, "получена неизвестная посылка")
+		require.Equal(t, expectedParcel.Client, returnedParcel.Client)
+		require.Equal(t, expectedParcel.Address, returnedParcel.Address)
+		require.Equal(t, expectedParcel.Status, returnedParcel.Status)
+		require.Equal(t, expectedParcel.CreatedAt, returnedParcel.CreatedAt)
+	}
 }

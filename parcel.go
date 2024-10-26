@@ -69,7 +69,10 @@ func (s ParcelStore) Delete(number int) error {
 		return fmt.Errorf("can only delete registered parcel")
 	}
 	_, err = s.db.Exec(`DELETE FROM parcel WHERE number = ?`, number)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to delete: %w", err)
+	}
+	return nil
 }
 
 // SetAddress обновляет адрес посылки, если она в статусе "registered"
