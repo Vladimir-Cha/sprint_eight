@@ -14,14 +14,10 @@ func NewParcelStore(db *sql.DB) ParcelStore {
 
 func (s ParcelStore) Add(p Parcel) (int, error) {
 	// реализуйте добавление строки в таблицу parcel, используйте данные из переменной p
-	// db, err := sql.Open("sqlite", "tracker.db")
-	// if err != nil {
-	// 	return 0, err
-	// }
-	// defer db.Close()
+
 	res, err := s.db.Exec("INSERT INTO parcel (client, status, address, created_at) VALUES (:client, :status, :address, :created_at)",
 		sql.Named("client", p.Client),
-		sql.Named("status", ParcelStatusRegistered),
+		sql.Named("status", p.Status),
 		sql.Named("address", p.Address),
 		sql.Named("created_at", p.CreatedAt))
 	if err != nil {
@@ -58,6 +54,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	// заполните срез Parcel данными из таблицы
 	var res []Parcel
 	for rows.Next() {
@@ -67,6 +64,9 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 			return nil, err
 		}
 		res = append(res, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return res, nil
